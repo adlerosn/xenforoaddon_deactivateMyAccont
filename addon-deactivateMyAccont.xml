@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<addon addon_id="deactivateMyAccont" title="[kiror] Deactivate my account" version_string="0.2" version_id="2" url="https://github.com/adlerosn/" install_callback_class="deactivateMyAccont_Install" install_callback_method="install" uninstall_callback_class="deactivateMyAccont_Install" uninstall_callback_method="uninstall">
+  <admin_navigation>
+    <navigation navigation_id="deactivationlockedusers" parent_navigation_id="usersSection" display_order="110" link="users/deactivated-list" admin_permission_id="userGroup" debug_only="0" hide_no_children="0"/>
+  </admin_navigation>
+  <admin_permissions/>
+  <admin_style_properties/>
+  <admin_templates>
+    <template title="user_deactivated_list"><![CDATA[<xen:title>Deactivated users</xen:title>
+
+<xen:require css="filter_list.css" />
+<xen:require js="js/xenforo/filter_list.js" />
+
+<xen:form action="{xen:adminlink users/deactivated-list, '', '_params={$linkParams}'}" class="section">
+
+	<h2 class="subHeading">
+		<xen:if is="!{$showingAll}">
+			<xen:include template="filter_list_controls" />
+		<xen:else />
+			<input type="checkbox" class="CheckAll" data-filter=".selectListItem input:checkbox" checked="checked" />
+		</xen:if>
+		{xen:phrase users}
+	</h2>
+
+	<ol class="FilterList Scrollable" data-ajaxfilter="true">
+		<xen:include template="user_deactivated_list_items" />
+	</ol>
+
+	<input type="hidden" name="_xfConfirm" value="1" />
+
+</xen:form>
+]]></template>
+    <template title="user_deactivated_list_items"><![CDATA[<xen:foreach loop="$users" value="$user">
+	<xen:listitem
+		id="{$user.user_id}"
+		selectable="{$showingAll}"
+		selected="1"
+		selectname="user_ids[]"
+		label="{$user.username}"
+		href="{xen:adminlink 'users/edit', $user}"
+		snippet="{$user.email}">
+		<xen:beforelabel>
+			<img src="{xen:helper avatar, $user, s}" alt="" class="listAvatar" />
+		</xen:beforelabel>
+		<xen:html>
+			<xen:if is="{$user.user_deactivated_kiroraddon}">
+				<a href="{xen:adminlink users/deactivated-list, $user}" class="secondaryContent banCtrl">Unlock account</a>
+			<xen:else />
+			</xen:if>
+		</xen:html>
+	</xen:listitem>
+</xen:foreach>
+<xen:if is="{$filterMore}">
+	<li class="listNote">{xen:phrase more_records_matching_filter_more_specific}</li>
+</xen:if>]]></template>
+  </admin_templates>
+  <admin_template_modifications>
+    <modification template="helper_criteria_user" modification_key="addaccountlockswitchoncriteria" description="Add account lock switch" execution_order="15" enabled="1" action="str_replace">
+      <find><![CDATA[<!-- slot: moderator -->]]></find>
+      <replace><![CDATA[<li><label>
+<input type="checkbox" name="user_criteria[is_account_unlocked][rule]" value="is_account_unlocked" {xen:checked $userCriteria.is_account_unlocked} />
+{xen:phrase user_is_account_unlocked}</label></li>
+<li><label>
+<input type="checkbox" name="user_criteria[is_account_locked][rule]" value="is_account_locked" {xen:checked $userCriteria.is_account_locked} />
+{xen:phrase user_is_account_locked}</label></li>
+	$0]]></replace>
+    </modification>
+  </admin_template_modifications>
+  <code_events/>
+  <code_event_listeners>
+    <listener event_id="criteria_user" execute_order="10" callback_class="deactivateMyAccont_CriteriaUserEvent" callback_method="locked" active="1" hint="" description="Is user locked?"/>
+    <listener event_id="criteria_user" execute_order="10" callback_class="deactivateMyAccont_CriteriaUserEvent" callback_method="unlocked" active="1" hint="" description="Is user unlocked?"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="deactivateMyAccont_ControllerPublicAccountListener" callback_method="callback" active="1" hint="XenForo_ControllerPublic_Account" description="Add deactivation sublink"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="deactivateMyAccont_ControllerPublicLoginListener" callback_method="callback" active="1" hint="XenForo_ControllerPublic_Login" description="Forbids logging in if locked"/>
+    <listener event_id="load_class_controller" execute_order="10" callback_class="deactivateMyAccont_ControllerAdminUserListener" callback_method="callback" active="1" hint="XenForo_ControllerAdmin_User" description="Add reactivation in AdminCP"/>
+    <listener event_id="load_class_datawriter" execute_order="10" callback_class="deactivateMyAccont_DataWriterUserListener" callback_method="callback" active="1" hint="XenForo_DataWriter_User" description="Improves user DataWriter to store deactivation"/>
+  </code_event_listeners>
+  <cron/>
+  <email_templates/>
+  <email_template_modifications/>
+  <optiongroups/>
+  <permissions>
+    <permission_groups/>
+    <permissions/>
+    <interface_groups/>
+  </permissions>
+  <phrases>
+    <phrase title="admin_navigation_deactivationlockedusers" version_id="1" version_string="0.1"><![CDATA[Deactivated users]]></phrase>
+    <phrase title="kiror_accdeact_confirmation_BTN_n" version_id="1" version_string="0.1"><![CDATA[Cancel]]></phrase>
+    <phrase title="kiror_accdeact_confirmation_BTN_y" version_id="1" version_string="0.1"><![CDATA[Confirm Deactivation]]></phrase>
+    <phrase title="kiror_accdeact_confirmation_line1" version_id="1" version_string="0.1"><![CDATA[Confirmation]]></phrase>
+    <phrase title="kiror_accdeact_confirmation_line2" version_id="1" version_string="0.1"><![CDATA[<b>Warning:</b> If you proceed, your account will be deactivated and you will be immediately logged out. You will not be able to log back in after completing this process.]]></phrase>
+    <phrase title="kiror_accdeact_confirmation_line3" version_id="1" version_string="0.1"><![CDATA[You will need to contact staff if you ever wish to reactivate your account.]]></phrase>
+    <phrase title="kiror_accdeact_d" version_id="1" version_string="0.1"><![CDATA[Deactivation]]></phrase>
+    <phrase title="kiror_accdeact_da" version_id="1" version_string="0.1"><![CDATA[Deactivate Account]]></phrase>
+    <phrase title="kiror_accdeact_done" version_id="1" version_string="0.1"><![CDATA[Account deactivated]]></phrase>
+    <phrase title="kiror_accdeact_greeting_BTN_n" version_id="1" version_string="0.1"><![CDATA[Cancel]]></phrase>
+    <phrase title="kiror_accdeact_greeting_BTN_y" version_id="1" version_string="0.1"><![CDATA[Apply]]></phrase>
+    <phrase title="kiror_accdeact_greeting_line1" version_id="1" version_string="0.1"><![CDATA[Proceed with caution]]></phrase>
+    <phrase title="kiror_accdeact_greeting_line2" version_id="1" version_string="0.1"><![CDATA[This page will deactivate your account. Your account details will be set private and you will be unable to login to your account.]]></phrase>
+    <phrase title="kiror_accdeact_greeting_line3" version_id="1" version_string="0.1"><![CDATA[Click "Apply" to deactivate your account.]]></phrase>
+    <phrase title="kiror_accdeact_login_err" version_id="1" version_string="0.1"><![CDATA[Your account has been deactivated and is currently locked. Please contact a staff member if you wish to re-activate your account.]]></phrase>
+    <phrase title="kiror_accdeact_staff_err" version_id="1" version_string="0.1"><![CDATA[Staff accounts may not lock themselves out.]]></phrase>
+    <phrase title="user_is_account_locked" version_id="1" version_string="0.1"><![CDATA[User has account locked]]></phrase>
+    <phrase title="user_is_account_unlocked" version_id="1" version_string="0.1"><![CDATA[User has account unlocked]]></phrase>
+  </phrases>
+  <route_prefixes/>
+  <style_properties/>
+  <templates>
+    <template title="account_deactivate_kiror" version_id="1" version_string="0.1"><![CDATA[<xen:title>{xen:phrase kiror_accdeact_da}</xen:title>
+
+
+<xen:require css="account.css" />
+
+<xen:if is="{$firstscreen}">
+<div class="xenForm privacyForm AutoValidator">
+	
+	<h3 class="subHeading">{xen:phrase kiror_accdeact_greeting_line1}</h3>
+	
+	<dl class="ctrlUnit surplusLabel">
+		<dt><label></label></dt>
+		<dd>
+			<ul>
+				<li><label>{xen:phrase kiror_accdeact_greeting_line2}</li>
+				<li class="secondaryContent"><a><b>{xen:phrase kiror_accdeact_greeting_line3}</b></a></li>
+			</ul>
+		</dd>
+	</dl>
+
+	<dl class="ctrlUnit submitUnit">
+		<dt></dt>
+		<dd>
+		<a class="button primary" href="{xen:link /}">{xen:phrase kiror_accdeact_greeting_BTN_n}</a>
+		<a class="button" href="{xen:link account/deactivate-confirmation}">{xen:phrase kiror_accdeact_greeting_BTN_y}</a>
+	</dl>
+
+	<xen:if is="!{$hasIdentities}">
+		<input type="hidden" name="allow_view_identities" value="{$visitor.allow_view_identities}" />
+	</xen:if>
+
+	<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+	<input type="hidden" name="firstscreen" value="{$firstscreen}" />
+</div>
+<xen:else />
+<form method="post" class="xenForm privacyForm AutoValidator"
+	action="{xen:link 'account/deactivate-save'}"
+	data-fieldValidatorUrl="{xen:link 'account/validate-field.json'}"
+	data-redirect="true">
+	
+	<h3 class="subHeading">{xen:phrase kiror_accdeact_confirmation_line1}</h3>
+	
+	<dl class="ctrlUnit surplusLabel">
+		<dt><label></label></dt>
+		<dd>
+			<ul>
+				<li><label>{xen:phrase kiror_accdeact_confirmation_line2}</li>
+				<li class="secondaryContent"><a><b>{xen:phrase kiror_accdeact_confirmation_line3}</b></a></li>
+			</ul>
+		</dd>
+		<dt>{xen:phrase name}:</dt>
+		<dd><input type="text" class="textCtrl" value="{$visitor.username}" placeholder="{xen:phrase name}" name="visitor_username" disabled /></dd>
+		<dt>{xen:phrase current_password}:</dt>
+		<dd><input type="password" class="textCtrl" value="" placeholder="{xen:phrase password}" name="visitor_password" /></dd>
+	</dl>
+	
+	<dl class="ctrlUnit submitUnit">
+		<dt></dt>
+		<dd>
+		<a class="button primary" href="{xen:link account/deactivate}">{xen:phrase kiror_accdeact_confirmation_BTN_n}</a>
+		<input type="submit" name="save" value="{xen:phrase kiror_accdeact_confirmation_BTN_y}" accesskey="s" class="button" /></dd>
+	</dl>
+
+	<xen:if is="!{$hasIdentities}">
+		<input type="hidden" name="allow_view_identities" value="{$visitor.allow_view_identities}" />
+	</xen:if>
+
+	<input type="hidden" name="_xfToken" value="{$visitor.csrf_token_page}" />
+	<input type="hidden" name="firstscreen" value="{$firstscreen}" />
+</form>
+</xen:if>]]></template>
+    <template title="account_wrapperExtend_deactivate_kiror" version_id="1" version_string="0.1"><![CDATA[					<li><a
+						class="{xen:if "{$selectedKey} == 'account/deactivate'", 'secondaryContent', 'primaryContent'}"
+						href="{xen:link account/deactivate}">{xen:phrase kiror_accdeact_d}</a></li>]]></template>
+  </templates>
+  <public_template_modifications>
+    <modification template="account_wrapper" modification_key="addaccountdeactivationextend" description="Add Account Deactivation extend" execution_order="10" enabled="1" action="str_replace">
+      <find><![CDATA[href="{xen:link account/security}">{xen:phrase password}</a></li>]]></find>
+      <replace><![CDATA[$0
+<xen:include template="account_wrapperExtend_deactivate_kiror" />]]></replace>
+    </modification>
+    <modification template="account_contact_details" modification_key="adddeactivationbuttononcontactdetails" description="Add deactivation button on contact details" execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[/<dd><input.+name="save"[^>]+>/s]]></find>
+      <replace><![CDATA[$0 <a class="button" href="{xen:link account/deactivate}">{xen:phrase kiror_accdeact_da}</a>]]></replace>
+    </modification>
+    <modification template="account_privacy" modification_key="adddeactivationbuttononprivacy" description="Add deactivation button on privacy" execution_order="10" enabled="1" action="preg_replace">
+      <find><![CDATA[/<dd><input.+name="save"[^>]+>/s]]></find>
+      <replace><![CDATA[$0 <a class="button" href="{xen:link account/deactivate}">{xen:phrase kiror_accdeact_da}</a>]]></replace>
+    </modification>
+  </public_template_modifications>
+  <bb_code_media_sites/>
+  <bb_codes/>
+</addon>
